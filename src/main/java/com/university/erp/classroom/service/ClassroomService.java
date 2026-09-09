@@ -1,4 +1,7 @@
 package com.university.erp.classroom.service;
 
-public interface ClassroomService {
+import com.university.erp.classroom.entity.Classroom;
+import com.university.erp.common.CrudService;
+
+public interface ClassroomService extends CrudService<Classroom, Integer> {
 }

@@ -1,4 +1,7 @@
 package com.university.erp.finance.service;
 
-public interface LibraryTransactionService {
+import com.university.erp.common.CrudService;
+import com.university.erp.finance.entity.LibraryTransaction;
+
+public interface LibraryTransactionService extends CrudService<LibraryTransaction, Long> {
 }

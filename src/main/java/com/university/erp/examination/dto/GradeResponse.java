@@ -1,4 +1,6 @@
 package com.university.erp.examination.dto;
 
-public class GradeResponse {
+import com.university.erp.examination.entity.Grade;
+
+public record GradeResponse(Grade grade) {
 }

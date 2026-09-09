@@ -1,4 +1,7 @@
 package com.university.erp.department.repository;
 
-public class DepartmentRepository {
+import com.university.erp.department.entity.Department;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface DepartmentRepository extends JpaRepository<Department, Integer> {
 }

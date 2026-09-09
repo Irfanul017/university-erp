@@ -1,4 +1,7 @@
 package com.university.erp.examination.service;
 
-public interface ExaminationService {
+import com.university.erp.common.CrudService;
+import com.university.erp.examination.entity.Examination;
+
+public interface ExaminationService extends CrudService<Examination, Long> {
 }

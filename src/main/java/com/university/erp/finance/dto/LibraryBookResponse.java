@@ -1,4 +1,6 @@
 package com.university.erp.finance.dto;
 
-public class LibraryBookResponse {
+import com.university.erp.finance.entity.LibraryBook;
+
+public record LibraryBookResponse(LibraryBook libraryBook) {
 }
