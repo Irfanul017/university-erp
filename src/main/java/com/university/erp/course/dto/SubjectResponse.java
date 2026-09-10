@@ -1,4 +1,6 @@
 package com.university.erp.course.dto;
 
-public class SubjectResponse {
+import com.university.erp.course.entity.Subject;
+
+public record SubjectResponse(Subject subject) {
 }

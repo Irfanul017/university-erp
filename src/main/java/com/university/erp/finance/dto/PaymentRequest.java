@@ -1,4 +1,6 @@
 package com.university.erp.finance.dto;
 
-public class PaymentRequest {
+import com.university.erp.finance.entity.Payment;
+
+public record PaymentRequest(Payment payment) {
 }

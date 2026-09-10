@@ -1,4 +1,6 @@
 package com.university.erp.student.dto;
 
-public class EnrollmentRequest {
+import com.university.erp.student.entity.Enrollment;
+
+public record EnrollmentRequest(Enrollment enrollment) {
 }
