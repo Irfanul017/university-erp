@@ -199,5 +199,5 @@ public class Faculty {
 		this.updatedBy = updatedBy;
 	}
 
-    // Generate getters and setters
+
 }

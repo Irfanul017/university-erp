@@ -125,5 +125,5 @@ public class Department {
         this.updatedBy = updatedBy;
     }
 
-    // Generate getters and setters
+
 }
