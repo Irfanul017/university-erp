@@ -13,6 +13,8 @@ public interface FacultyRepository extends JpaRepository<Faculty, Integer> {
 
     boolean existsByEmailIgnoreCase(String email);
 
+    boolean existsByDepartmentDepartmentId(Integer departmentId);
+
     List<Faculty> findByDepartmentDepartmentId(Integer departmentId);
 
     List<Faculty> findByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(

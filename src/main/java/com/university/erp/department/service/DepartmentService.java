@@ -9,17 +9,21 @@ import com.university.erp.department.dto.DepartmentResponse;
 import com.university.erp.department.entity.Department;
 import com.university.erp.department.mapper.DepartmentMapper;
 import com.university.erp.department.repository.DepartmentRepository;
+import com.university.erp.department.repository.FacultyRepository;
 
 @Service
 public class DepartmentService {
 
     private final DepartmentRepository departmentRepository;
     private final DepartmentMapper departmentMapper;
+    private final FacultyRepository facultyRepository;
 
     public DepartmentService(DepartmentRepository departmentRepository,
-                             DepartmentMapper departmentMapper) {
+                             DepartmentMapper departmentMapper,
+                             FacultyRepository facultyRepository) {
         this.departmentRepository = departmentRepository;
         this.departmentMapper = departmentMapper;
+        this.facultyRepository = facultyRepository;
     }
 
     public DepartmentResponse create(DepartmentRequest request) {
@@ -28,7 +32,10 @@ public class DepartmentService {
         }
 
         Department department = departmentMapper.toEntity(request);
-        return departmentMapper.toResponse(departmentRepository.save(department));
+
+        return departmentMapper.toResponse(
+                departmentRepository.save(department)
+        );
     }
 
     public List<DepartmentResponse> getAll() {
@@ -40,31 +47,42 @@ public class DepartmentService {
 
     public DepartmentResponse getById(Integer id) {
         Department department = departmentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Department not found: " + id));
+                .orElseThrow(() ->
+                        new RuntimeException("Department not found: " + id));
 
         return departmentMapper.toResponse(department);
     }
 
     public DepartmentResponse update(Integer id, DepartmentRequest request) {
         Department department = departmentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Department not found: " + id));
+                .orElseThrow(() ->
+                        new RuntimeException("Department not found: " + id));
 
-        if (!department.getDepartmentName().equalsIgnoreCase(request.departmentName())
-                && departmentRepository.existsByDepartmentNameIgnoreCase(request.departmentName())) {
-            throw new IllegalArgumentException("Department name already exists");
+        if (!department.getDepartmentName()
+                .equalsIgnoreCase(request.departmentName())
+                && departmentRepository
+                        .existsByDepartmentNameIgnoreCase(request.departmentName())) {
+
+            throw new IllegalArgumentException(
+                    "Department name already exists"
+            );
         }
 
         department.setDepartmentName(request.departmentName());
         department.setLocation(request.location());
 
-        return departmentMapper.toResponse(departmentRepository.save(department));
+        return departmentMapper.toResponse(
+                departmentRepository.save(department)
+        );
     }
 
     public void delete(Integer id) {
-        Department department = departmentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Department not found: " + id));
 
-        if (!department.getFaculties().isEmpty()) {
+        Department department = departmentRepository.findById(id)
+                .orElseThrow(() ->
+                        new RuntimeException("Department not found: " + id));
+
+        if (facultyRepository.existsByDepartmentDepartmentId(id)) {
             throw new IllegalStateException(
                     "Cannot delete department while faculties are assigned to it"
             );
