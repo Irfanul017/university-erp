@@ -1,17 +1,31 @@
 package com.university.erp.department.mapper;
 
-import com.university.erp.department.dto.*;
+import org.springframework.stereotype.Component;
+
+import com.university.erp.department.dto.FacultyResponse;
 import com.university.erp.department.entity.Faculty;
 
-public final class FacultyMapper {
-    private FacultyMapper() {
-    }
+@Component
+public class FacultyMapper {
 
-    public static Faculty toEntity(FacultyRequest request) {
-        return request.faculty();
-    }
-
-    public static FacultyResponse toResponse(Faculty entity) {
-        return new FacultyResponse(entity);
+    public FacultyResponse toResponse(Faculty faculty) {
+        return new FacultyResponse(
+                faculty.getFacultyId(),
+                faculty.getFirstName(),
+                faculty.getLastName(),
+                faculty.getEmail(),
+                faculty.getPhone(),
+                faculty.getDob(),
+                faculty.getDesignation(),
+                faculty.getQualification(),
+                faculty.getSpecialization(),
+                faculty.getJoiningDate(),
+                faculty.getStatus(),
+                faculty.getDepartment().getDepartmentId(),
+                faculty.getDepartment().getDepartmentName(),
+                faculty.getCreatedAt(),
+                faculty.getUpdatedAt()
+        );
     }
 }
+
