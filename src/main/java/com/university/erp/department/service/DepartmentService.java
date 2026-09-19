@@ -1,7 +1,75 @@
 package com.university.erp.department.service;
 
-import com.university.erp.common.CrudService;
-import com.university.erp.department.entity.Department;
+import java.util.List;
 
-public interface DepartmentService extends CrudService<Department, Integer> {
+import org.springframework.stereotype.Service;
+
+import com.university.erp.department.dto.DepartmentRequest;
+import com.university.erp.department.dto.DepartmentResponse;
+import com.university.erp.department.entity.Department;
+import com.university.erp.department.mapper.DepartmentMapper;
+import com.university.erp.department.repository.DepartmentRepository;
+
+@Service
+public class DepartmentService {
+
+    private final DepartmentRepository departmentRepository;
+    private final DepartmentMapper departmentMapper;
+
+    public DepartmentService(DepartmentRepository departmentRepository,
+                             DepartmentMapper departmentMapper) {
+        this.departmentRepository = departmentRepository;
+        this.departmentMapper = departmentMapper;
+    }
+
+    public DepartmentResponse create(DepartmentRequest request) {
+        if (departmentRepository.existsByDepartmentNameIgnoreCase(request.departmentName())) {
+            throw new IllegalArgumentException("Department name already exists");
+        }
+
+        Department department = departmentMapper.toEntity(request);
+        return departmentMapper.toResponse(departmentRepository.save(department));
+    }
+
+    public List<DepartmentResponse> getAll() {
+        return departmentRepository.findAll()
+                .stream()
+                .map(departmentMapper::toResponse)
+                .toList();
+    }
+
+    public DepartmentResponse getById(Integer id) {
+        Department department = departmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Department not found: " + id));
+
+        return departmentMapper.toResponse(department);
+    }
+
+    public DepartmentResponse update(Integer id, DepartmentRequest request) {
+        Department department = departmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Department not found: " + id));
+
+        if (!department.getDepartmentName().equalsIgnoreCase(request.departmentName())
+                && departmentRepository.existsByDepartmentNameIgnoreCase(request.departmentName())) {
+            throw new IllegalArgumentException("Department name already exists");
+        }
+
+        department.setDepartmentName(request.departmentName());
+        department.setLocation(request.location());
+
+        return departmentMapper.toResponse(departmentRepository.save(department));
+    }
+
+    public void delete(Integer id) {
+        Department department = departmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Department not found: " + id));
+
+        if (!department.getFaculties().isEmpty()) {
+            throw new IllegalStateException(
+                    "Cannot delete department while faculties are assigned to it"
+            );
+        }
+
+        departmentRepository.delete(department);
+    }
 }
