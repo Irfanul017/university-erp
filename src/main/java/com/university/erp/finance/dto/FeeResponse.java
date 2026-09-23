@@ -1,4 +1,6 @@
 package com.university.erp.finance.dto;
 
-public class FeeResponse {
+import com.university.erp.finance.entity.Fee;
+
+public record FeeResponse(Fee fee) {
 }

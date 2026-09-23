@@ -1,4 +1,6 @@
 package com.university.erp.classroom.dto;
 
-public class TimetableRequest {
+import com.university.erp.classroom.entity.Timetable;
+
+public record TimetableRequest(Timetable timetable) {
 }
