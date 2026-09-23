@@ -1,6 +1,19 @@
 package com.university.erp.student.dto;
 
-import com.university.erp.student.entity.Enrollment;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.UUID;
 
-public record EnrollmentRequest(Enrollment enrollment) {
+public record EnrollmentRequest(
+	UUID studentId,
+	Integer semester,
+	String academicYear,
+	Integer rollNo,
+	String division,
+	String admissionType,
+	String enrollmentStatus,
+	LocalDate startDate,
+	LocalDate endDate,
+	String exitReason,
+	BigDecimal finalCgpa) {
 }
