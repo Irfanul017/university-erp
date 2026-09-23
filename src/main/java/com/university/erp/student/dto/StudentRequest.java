@@ -1,6 +1,17 @@
 package com.university.erp.student.dto;
 
-import com.university.erp.student.entity.Student;
+import java.time.LocalDate;
 
-public record StudentRequest(Student student) {
+public record StudentRequest(
+	String enrollmentNo,
+	String firstName,
+	String middleName,
+	String lastName,
+	String gender,
+	LocalDate dob,
+	String email,
+	String phone,
+	String address,
+	LocalDate admissionDate,
+	String currentStatus) {
 }

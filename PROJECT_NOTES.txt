@@ -1,0 +1,320 @@
+UNIVERSITY ERP - PROJECT NOTES
+
+Date: 2026-09-23
+
+STATUS SUMMARY
+
+1. Supabase connectivity
+- Verified that the database host resolves correctly using the pooler endpoint.
+- Verified that port 5432 is reachable from this environment.
+- Verified that Spring Boot successfully connects to PostgreSQL and initializes JPA.
+- Database version reported by Hibernate: PostgreSQL 17.6.
+- App startup succeeded on port 8081 after moving off the occupied port 8080.
+
+2. Current database configuration
+- JDBC URL format for Supabase pooler:
+  jdbc:postgresql://<pooler-host>:5432/postgres?user=<project-user>&password=<your-password>&sslmode=require
+- Username: <supabase-project-user>
+- Password: <supabase-password>
+- Driver: org.postgresql.Driver
+- App port: 8081
+- Swagger UI: http://localhost:8081/swagger-ui/index.html
+- OpenAPI JSON: http://localhost:8081/v3/api-docs
+
+3. Student module
+- Student entity is mapped to the student table with UUID-based studentId.
+- Fields include enrollmentNo, firstName, lastName, email, admissionDate, etc.
+- Student request and response DTOs are implemented.
+- Student repository, service, mapper, and controller are in place.
+- Core relationship: one Student can have many Enrollment records.
+
+4. Enrollment module
+- Enrollment entity is mapped to the enrollment table with UUID-based enrollmentId.
+- Enrollment includes relationship to a student via UUID studentId.
+- Enrollment request and response DTOs are implemented.
+- Enrollment repository, service, mapper, and controller are in place.
+- Core relationship: many Enrollment records belong to one Student.
+
+4A. Working integration implemented (Student and Enrollment)
+- This is the live relationship already working in the project code:
+  Student.java -> @OneToMany(mappedBy = "student") private List<Enrollment> enrollments;
+  Enrollment.java -> @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "student_id") private Student student;
+- Meaning: one student can have many enrollments, each with a different semester, academic year, division, or roll number.
+- This is the integration pattern other modules should follow when connecting to the student and enrollment flow.
+
+4B. How to integrate with the student and enrollment modules
+1. Create a student first through POST /api/students.
+2. Copy the returned studentId UUID.
+3. Use that studentId in the enrollment payload for POST /api/enrollments.
+4. Fetch all students with GET /api/students.
+5. Fetch student enrollments with GET /api/students/{studentId}/enrollments.
+6. Fetch all enrollments with GET /api/enrollments.
+
+This is the exact connection chain used by the project:
+Student -> has many Enrollment records
+Enrollment -> belongs to one Student
+
+4C. SQL for student and enrollment tables
+```sql
+CREATE TABLE IF NOT EXISTS student (
+    student_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    enrollment_no VARCHAR(100) NOT NULL UNIQUE,
+    first_name VARCHAR(100) NOT NULL,
+    middle_name VARCHAR(100),
+    last_name VARCHAR(100) NOT NULL,
+    gender VARCHAR(20),
+    dob DATE,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    phone VARCHAR(30),
+    address TEXT,
+    admission_date DATE NOT NULL,
+    current_status VARCHAR(50) NOT NULL DEFAULT 'Active',
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS enrollment (
+    enrollment_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    student_id UUID NOT NULL,
+    semester INTEGER,
+    academic_year VARCHAR(20) NOT NULL,
+    roll_no INTEGER NOT NULL,
+    division VARCHAR(10) NOT NULL,
+    admission_type VARCHAR(50),
+    enrollment_status VARCHAR(50) DEFAULT 'Active',
+    start_date DATE NOT NULL,
+    end_date DATE,
+    exit_reason TEXT,
+    final_cgpa DECIMAL(4,2),
+    created_at TIMESTAMP DEFAULT NOW(),
+    CONSTRAINT fk_enrollment_student
+        FOREIGN KEY (student_id) REFERENCES student(student_id)
+        ON DELETE CASCADE
+);
+```
+
+4D. Sample student and enrollment records
+Sample student JSON:
+{
+  "enrollmentNo": "1002026",
+  "firstName": "Riya",
+  "middleName": "A",
+  "lastName": "Patil",
+  "gender": "Female",
+  "dob": "2006-08-12",
+  "email": "riya.patil@example.com",
+  "phone": "9876543210",
+  "address": "Pune, Maharashtra",
+  "admissionDate": "2026-01-15",
+  "currentStatus": "Active"
+}
+
+Sample enrollment JSON:
+{
+  "studentId": "PASTE-STUDENT-UUID-HERE",
+  "semester": 1,
+  "academicYear": "2026-2027",
+  "rollNo": 1,
+  "division": "A",
+  "admissionType": "Regular",
+  "enrollmentStatus": "Active",
+  "startDate": "2026-06-01",
+  "endDate": null,
+  "exitReason": null,
+  "finalCgpa": null
+}
+
+4E. Final Supabase insert script
+This is the final insert template to use in Supabase SQL editor after the student table is created:
+
+```sql
+INSERT INTO student (
+    student_id,
+    enrollment_no,
+    first_name,
+    middle_name,
+    last_name,
+    gender,
+    dob,
+    email,
+    phone,
+    address,
+    admission_date,
+    current_status
+)
+VALUES
+    (
+        gen_random_uuid(),
+        '1002026',
+        'Riya',
+        'A',
+        'Patil',
+        'Female',
+        '2006-08-12',
+        'riya.patil@example.com',
+        '9876543210',
+        'Pune, Maharashtra',
+        '2026-01-15',
+        'Active'
+    ),
+    (
+        gen_random_uuid(),
+        '1002027',
+        'Aarav',
+        'Raj',
+        'Sharma',
+        'Male',
+        '2006-05-14',
+        'aarav.sharma@example.com',
+        '9876543211',
+        'Mumbai, Maharashtra',
+        '2026-01-15',
+        'Active'
+    );
+
+INSERT INTO enrollment (
+    enrollment_id,
+    student_id,
+    semester,
+    academic_year,
+    roll_no,
+    division,
+    admission_type,
+    enrollment_status,
+    start_date,
+    end_date,
+    exit_reason,
+    final_cgpa
+)
+VALUES
+    (
+        gen_random_uuid(),
+        (SELECT student_id FROM student WHERE enrollment_no = '1002026' LIMIT 1),
+        1,
+        '2026-2027',
+        1,
+        'A',
+        'Regular',
+        'Active',
+        '2026-06-01',
+        NULL,
+        NULL,
+        NULL
+    ),
+    (
+        gen_random_uuid(),
+        (SELECT student_id FROM student WHERE enrollment_no = '1002027' LIMIT 1),
+        1,
+        '2026-2027',
+        2,
+        'A',
+        'Regular',
+        'Active',
+        '2026-06-01',
+        NULL,
+        NULL,
+        NULL
+    );
+```
+
+4F. Supabase workflow for others
+- Use the SQL above in Supabase SQL editor.
+- Then test GET /api/students and GET /api/enrollments from Swagger.
+- For a connected student record, use GET /api/students/{studentId}/enrollments.
+- The same studentId used in the enrollment row is the join key for all data relationships.
+
+5. REST endpoints
+- GET    /api/students
+- GET    /api/students/{studentId}
+- POST   /api/students
+- PUT    /api/students/{studentId}
+- DELETE /api/students/{studentId}
+- GET    /api/students/{studentId}/enrollments
+- GET    /api/enrollments
+- GET    /api/enrollments/{enrollmentId}
+- POST   /api/enrollments
+- PUT    /api/enrollments/{enrollmentId}
+- DELETE /api/enrollments/{enrollmentId}
+
+6. Important API behavior
+- Create a student first.
+- Use the studentId returned by the POST /api/students response.
+- Then create an enrollment using that UUID in the enrollment request body.
+- Current `studentId` and `enrollmentId` fields are UUIDs, not custom year-based numeric IDs.
+
+7. Swagger usage
+- Open Swagger UI at http://localhost:8081/swagger-ui/index.html
+- Use POST /api/students to create a record.
+- Copy the returned studentId and use it in POST /api/enrollments.
+- Use GET /api/students and GET /api/enrollments to fetch all records.
+
+SAMPLE STUDENT REQUEST
+
+{
+  "enrollmentNo": "1002026",
+  "firstName": "Riya",
+  "middleName": "A",
+  "lastName": "Patil",
+  "gender": "Female",
+  "dob": "2006-08-12",
+  "email": "riya.patil@example.com",
+  "phone": "9876543210",
+  "address": "Pune",
+  "admissionDate": "2026-01-15",
+  "currentStatus": "Active"
+}
+
+SAMPLE ENROLLMENT REQUEST
+
+{
+  "studentId": "PASTE-STUDENT-UUID-HERE",
+  "semester": 1,
+  "academicYear": "2026-2027",
+  "rollNo": 1,
+  "division": "A",
+  "admissionType": "Regular",
+  "enrollmentStatus": "Active",
+  "startDate": "2026-06-01",
+  "endDate": null,
+  "exitReason": null,
+  "finalCgpa": null
+}
+
+VALIDATION
+
+- Verified with Spring Boot startup logs that the app successfully reached the Supabase PostgreSQL database.
+- HikariPool reported a live connection successfully added.
+- JPA EntityManagerFactory initialized successfully.
+- App started successfully on port 8081.
+- Port 8080 conflict was the earlier startup blocker; it was resolved by switching to 8081.
+
+NOTES FOR FUTURE WORK
+
+- If the project must use year-based IDs such as `1002026` and `20261000`, the Student and Enrollment entities must be updated from UUID generation to custom string-based IDs.
+- Current code and database schema expect UUID identity fields, so any numeric ID format change requires model, DTO, repository, and controller updates.
+- Supabase connectivity is expected to work from the environment using the pooler connection string and a valid project user.
+
+SWAGGER TEST FLOW
+
+1. POST /api/students
+2. Copy studentId from response
+3. POST /api/enrollments with that studentId
+4. GET /api/students
+5. GET /api/students/{studentId}/enrollments
+6. GET /api/enrollments
+
+BASE URL
+http://localhost:8081
+
+DATE FORMAT
+YYYY-MM-DD
+
+SWAGGER LINKS
+http://localhost:8081/swagger-ui/index.html
+http://localhost:8081/v3/api-docs
+
+Swagger UI:
+http://localhost:8081/swagger-ui/index.html
+
+OpenAPI JSON:
+http://localhost:8081/v3/api-docs
