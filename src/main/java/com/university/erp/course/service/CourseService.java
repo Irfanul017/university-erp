@@ -1,7 +1,4 @@
 package com.university.erp.course.service;
 
-import com.university.erp.common.CrudService;
-import com.university.erp.course.entity.Course;
-
-public interface CourseService extends CrudService<Course, Long> {
+public interface CourseService {
 }
