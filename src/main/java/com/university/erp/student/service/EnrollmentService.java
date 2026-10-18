@@ -1,8 +1,4 @@
 package com.university.erp.student.service;
 
-import com.university.erp.common.CrudService;
-import com.university.erp.student.entity.Enrollment;
-import java.util.UUID;
-
-public interface EnrollmentService extends CrudService<Enrollment, UUID> {
+public interface EnrollmentService {
 }

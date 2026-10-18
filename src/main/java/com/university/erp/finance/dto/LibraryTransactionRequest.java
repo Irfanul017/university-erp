@@ -1,6 +1,4 @@
 package com.university.erp.finance.dto;
 
-import com.university.erp.finance.entity.LibraryTransaction;
-
-public record LibraryTransactionRequest(LibraryTransaction libraryTransaction) {
+public class LibraryTransactionRequest {
 }
