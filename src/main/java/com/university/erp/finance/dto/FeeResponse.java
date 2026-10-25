@@ -1,6 +1,11 @@
 package com.university.erp.finance.dto;
 
-import com.university.erp.finance.entity.Fee;
+import java.math.BigDecimal;
 
-public record FeeResponse(Fee fee) {
-}
+public record FeeResponse(
+        Long id,
+        String feeType,
+        BigDecimal amount,
+        String description,
+        boolean active
+) {}

@@ -1,6 +1,10 @@
 package com.university.erp.finance.dto;
 
-import com.university.erp.finance.entity.LibraryBook;
-
-public record LibraryBookRequest(LibraryBook libraryBook) {
-}
+public record LibraryBookRequest(
+        String isbn,
+        String title,
+        String author,
+        String publisher,
+        Integer totalCopies,
+        Integer availableCopies
+) {}

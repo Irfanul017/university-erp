@@ -1,6 +1,11 @@
 package com.university.erp.finance.dto;
 
-import com.university.erp.finance.entity.LibraryTransaction;
+import java.time.LocalDate;
+import java.util.UUID;
 
-public record LibraryTransactionRequest(LibraryTransaction libraryTransaction) {
-}
+public record LibraryTransactionRequest(
+        Long bookId,
+        UUID studentId,
+        LocalDate issueDate,
+        LocalDate dueDate
+) {}
