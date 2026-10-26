@@ -118,8 +118,7 @@ class LibraryBookServiceImplTest {
 
     @Test
     void testList_Search() {
-        when(libraryBookRepository.searchBooks(eq("Algorithms"), isNull(), isNull(), eq(false)))
-                .thenReturn(List.of(sampleBook));
+        when(libraryBookRepository.findAll()).thenReturn(List.of(sampleBook));
 
         List<LibraryBookResponse> result = libraryBookService.list("Algorithms", null, null, false);
 

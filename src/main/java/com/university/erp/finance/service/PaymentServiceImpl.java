@@ -127,8 +127,13 @@ public class PaymentServiceImpl implements PaymentService {
     public List<PaymentResponse> list(String feeType, String paymentStatus, LocalDate paymentDate, UUID studentId) {
         String cleanType = (feeType != null && !feeType.trim().isEmpty()) ? feeType.trim() : null;
         String cleanStatus = (paymentStatus != null && !paymentStatus.trim().isEmpty()) ? paymentStatus.trim() : null;
-        return paymentRepository.searchPayments(cleanType, cleanStatus, paymentDate, studentId)
-                .stream()
+
+        return paymentRepository.findAll().stream()
+                .filter(p -> cleanType == null || (p.getFeeType() != null && p.getFeeType().equalsIgnoreCase(cleanType)))
+                .filter(p -> cleanStatus == null || (p.getPaymentStatus() != null && p.getPaymentStatus().equalsIgnoreCase(cleanStatus)))
+                .filter(p -> paymentDate == null || (p.getPaymentDate() != null && p.getPaymentDate().equals(paymentDate)))
+                .filter(p -> studentId == null || (p.getStudentId() != null && p.getStudentId().equals(studentId)))
+                .sorted(Comparator.comparing(Payment::getCreatedAt, Comparator.nullsLast(Comparator.reverseOrder())))
                 .map(PaymentMapper::toResponse)
                 .toList();
     }

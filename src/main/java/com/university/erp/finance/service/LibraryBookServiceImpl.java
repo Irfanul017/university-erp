@@ -81,8 +81,12 @@ public class LibraryBookServiceImpl implements LibraryBookService {
         String cleanIsbn = (isbn != null && !isbn.trim().isEmpty()) ? isbn.trim() : null;
         boolean availOnly = Boolean.TRUE.equals(availableOnly);
 
-        return libraryBookRepository.searchBooks(cleanTitle, cleanAuthor, cleanIsbn, availOnly)
-                .stream()
+        return libraryBookRepository.findAll().stream()
+                .filter(b -> cleanTitle == null || (b.getTitle() != null && b.getTitle().toLowerCase().contains(cleanTitle.toLowerCase())))
+                .filter(b -> cleanAuthor == null || (b.getAuthor() != null && b.getAuthor().toLowerCase().contains(cleanAuthor.toLowerCase())))
+                .filter(b -> cleanIsbn == null || (b.getIsbn() != null && b.getIsbn().toLowerCase().contains(cleanIsbn.toLowerCase())))
+                .filter(b -> !availOnly || (b.getAvailableCopies() != null && b.getAvailableCopies() > 0))
+                .sorted(java.util.Comparator.comparing(LibraryBook::getId, java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder())))
                 .map(LibraryBookMapper::toResponse)
                 .toList();
     }

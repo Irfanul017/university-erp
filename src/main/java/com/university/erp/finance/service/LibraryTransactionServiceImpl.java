@@ -152,7 +152,12 @@ public class LibraryTransactionServiceImpl implements LibraryTransactionService 
     @Transactional(readOnly = true)
     public List<LibraryTransactionResponse> list(UUID studentId, Long bookId, String status) {
         String cleanStatus = (status != null && !status.trim().isEmpty()) ? status.trim() : null;
-        List<LibraryTransaction> transactions = libraryTransactionRepository.searchTransactions(studentId, bookId, cleanStatus);
+        List<LibraryTransaction> transactions = libraryTransactionRepository.findAll().stream()
+                .filter(t -> studentId == null || (t.getStudentId() != null && t.getStudentId().equals(studentId)))
+                .filter(t -> bookId == null || (t.getBookId() != null && t.getBookId().equals(bookId)))
+                .filter(t -> cleanStatus == null || (t.getStatus() != null && t.getStatus().equalsIgnoreCase(cleanStatus)))
+                .sorted(java.util.Comparator.comparing(LibraryTransaction::getId, java.util.Comparator.nullsLast(java.util.Comparator.reverseOrder())))
+                .toList();
         return mapToResponsesWithBooks(transactions);
     }
 
