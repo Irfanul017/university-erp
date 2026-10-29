@@ -66,4 +66,12 @@ public class StudentController {
 		studentService.delete(studentId);
 		return ResponseEntity.noContent().build();
 	}
+
+	@DeleteMapping("/{studentId}/permanent")
+	@Operation(summary = "Permanently delete a student",
+			description = "Physically removes the student. This cannot be undone and may be rejected if enrollments reference the student.")
+	public ResponseEntity<Void> hardDelete(@PathVariable UUID studentId) {
+		studentService.hardDelete(studentId);
+		return ResponseEntity.noContent().build();
+	}
 }
