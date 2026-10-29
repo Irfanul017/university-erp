@@ -71,11 +71,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
 
     @Override
     public EnrollmentResponse update(UUID enrollmentId, EnrollmentRequest request) {
-        Enrollment enrollment = enrollmentRepository.findById(enrollmentId).orElse(null);
-        if (enrollment == null) {
-            logger.warn("Cannot update enrollment {} because it does not exist", enrollmentId);
-            return null;
-        }
+        Enrollment enrollment = getEnrollment(enrollmentId);
         Student student = getStudent(request.studentId());
         Course course = getCourse(request.courseId());
         EnrollmentMapper.updateEntity(enrollment, request, student, course);

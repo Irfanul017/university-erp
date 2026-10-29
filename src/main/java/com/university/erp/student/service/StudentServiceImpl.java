@@ -46,11 +46,7 @@ public class StudentServiceImpl implements StudentService {
 
     @Override
     public StudentResponse update(UUID studentId, StudentRequest request) {
-        Student student = studentRepository.findById(studentId).orElse(null);
-        if (student == null) {
-            logger.warn("Cannot update student {} because it does not exist", studentId);
-            return null;
-        }
+        Student student = getStudent(studentId);
         StudentMapper.updateEntity(student, request);
         Student updatedStudent = studentRepository.save(student);
         logger.info("Updated student {}", studentId);

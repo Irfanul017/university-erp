@@ -6,6 +6,7 @@ import com.university.erp.student.service.EnrollmentService;
 import java.net.URI;
 import java.util.List;
 import java.util.UUID;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -41,14 +42,15 @@ public class EnrollmentController {
 
 	@PostMapping
 	@Operation(summary = "Create an enrollment")
-	public ResponseEntity<EnrollmentResponse> create(@RequestBody EnrollmentRequest request) {
+	public ResponseEntity<EnrollmentResponse> create(@Valid @RequestBody EnrollmentRequest request) {
 		EnrollmentResponse response = enrollmentService.create(request);
 		return ResponseEntity.created(URI.create("/api/enrollments/" + response.enrollmentId())).body(response);
 	}
 
 	@PutMapping("/{enrollmentId}")
 	@Operation(summary = "Update an enrollment")
-	public EnrollmentResponse update(@PathVariable UUID enrollmentId, @RequestBody EnrollmentRequest request) {
+	public EnrollmentResponse update(
+			@PathVariable UUID enrollmentId, @Valid @RequestBody EnrollmentRequest request) {
 		return enrollmentService.update(enrollmentId, request);
 	}
 

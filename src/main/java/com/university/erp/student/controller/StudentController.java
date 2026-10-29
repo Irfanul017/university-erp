@@ -8,6 +8,7 @@ import com.university.erp.student.service.StudentService;
 import java.net.URI;
 import java.util.List;
 import java.util.UUID;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -49,14 +50,14 @@ public class StudentController {
 
 	@PostMapping
 	@Operation(summary = "Create a student")
-	public ResponseEntity<StudentResponse> create(@RequestBody StudentRequest request) {
+	public ResponseEntity<StudentResponse> create(@Valid @RequestBody StudentRequest request) {
 		StudentResponse response = studentService.create(request);
 		return ResponseEntity.created(URI.create("/api/students/" + response.studentId())).body(response);
 	}
 
 	@PutMapping("/{studentId}")
 	@Operation(summary = "Update a student")
-	public StudentResponse update(@PathVariable UUID studentId, @RequestBody StudentRequest request) {
+	public StudentResponse update(@PathVariable UUID studentId, @Valid @RequestBody StudentRequest request) {
 		return studentService.update(studentId, request);
 	}
 

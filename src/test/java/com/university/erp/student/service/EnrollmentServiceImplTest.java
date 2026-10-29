@@ -1,7 +1,6 @@
 package com.university.erp.student.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -53,13 +52,16 @@ class EnrollmentServiceImplTest {
     }
 
     @Test
-    void updateReturnsNullWhenEnrollmentDoesNotExist() {
+    void updateReturnsNotFoundWhenEnrollmentDoesNotExist() {
         UUID enrollmentId = UUID.randomUUID();
         when(enrollmentRepository.findById(enrollmentId)).thenReturn(Optional.empty());
 
-        EnrollmentResponse response = enrollmentService.update(enrollmentId, mock(EnrollmentRequest.class));
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> enrollmentService.update(enrollmentId, mock(EnrollmentRequest.class)));
 
-        assertNull(response);
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+        assertEquals("Enrollment not found: " + enrollmentId, exception.getReason());
         verify(studentRepository, never()).findById(org.mockito.ArgumentMatchers.any(UUID.class));
         verify(enrollmentRepository, never()).save(org.mockito.ArgumentMatchers.any(Enrollment.class));
     }
