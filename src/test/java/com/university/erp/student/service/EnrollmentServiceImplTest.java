@@ -1,8 +1,8 @@
 package com.university.erp.student.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -10,8 +10,6 @@ import static org.mockito.Mockito.when;
 
 import com.university.erp.course.entity.Course;
 import com.university.erp.course.repository.CourseRepository;
-import com.university.erp.student.dto.EnrollmentRequest;
-import com.university.erp.student.dto.EnrollmentResponse;
 import com.university.erp.student.entity.Enrollment;
 import com.university.erp.student.entity.Student;
 import com.university.erp.student.repository.EnrollmentRepository;
@@ -53,24 +51,28 @@ class EnrollmentServiceImplTest {
     }
 
     @Test
-    void updateReturnsNullWhenEnrollmentDoesNotExist() {
+    void updateReturnsNotFoundWhenEnrollmentDoesNotExist() {
         UUID enrollmentId = UUID.randomUUID();
         when(enrollmentRepository.findById(enrollmentId)).thenReturn(Optional.empty());
 
-        EnrollmentResponse response = enrollmentService.update(enrollmentId, mock(EnrollmentRequest.class));
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> enrollmentService.update(enrollmentId, validRequest(new Student(), new Course())));
 
-        assertNull(response);
-        verify(studentRepository, never()).findById(org.mockito.ArgumentMatchers.any(UUID.class));
-        verify(enrollmentRepository, never()).save(org.mockito.ArgumentMatchers.any(Enrollment.class));
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+        assertEquals("Enrollment not found: " + enrollmentId, exception.getReason());
+        verify(studentRepository, never()).findById(any(UUID.class));
+        verify(enrollmentRepository, never()).save(any(Enrollment.class));
     }
 
     @Test
-    void updateMutatesAndSavesExistingEnrollment() {
+    void updateResolvesAssociationsAndCopiesEntityFields() {
         UUID enrollmentId = UUID.randomUUID();
         UUID studentId = UUID.randomUUID();
         long courseId = 5L;
-        Enrollment existingEnrollment = new Enrollment();
-        existingEnrollment.setEnrollmentId(enrollmentId);
+        Enrollment existing = new Enrollment();
+        existing.setEnrollmentId(enrollmentId);
+        existing.setEnrollmentStatus("Pending");
         Student student = new Student();
         student.setStudentId(studentId);
         student.setFirstName("Asha");
@@ -80,28 +82,83 @@ class EnrollmentServiceImplTest {
         course.setId(courseId);
         course.setCourseCode("CS-BSC");
         course.setCourseName("Computer Science");
-        EnrollmentRequest request = new EnrollmentRequest(
-                studentId, courseId, 2, "2026-2027", 17, "B", "Regular", "Active",
-                LocalDate.of(2026, 8, 1), null, null, new BigDecimal("3.75"));
-        when(enrollmentRepository.findById(enrollmentId)).thenReturn(Optional.of(existingEnrollment));
+        Enrollment request = validRequest(student, course);
+        request.setSemester(2);
+        request.setAcademicYear("2026-2027");
+        request.setRollNo(17);
+        request.setDivision("B");
+        request.setAdmissionType("Regular");
+        request.setEnrollmentStatus(null);
+        request.setStartDate(LocalDate.of(2026, 8, 1));
+        request.setFinalCgpa(new BigDecimal("3.75"));
+        when(enrollmentRepository.findById(enrollmentId)).thenReturn(Optional.of(existing));
         when(studentRepository.findById(studentId)).thenReturn(Optional.of(student));
         when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
-        when(enrollmentRepository.save(existingEnrollment)).thenReturn(existingEnrollment);
+        when(enrollmentRepository.save(existing)).thenReturn(existing);
 
-        EnrollmentResponse response = enrollmentService.update(enrollmentId, request);
+        Enrollment updated = enrollmentService.update(enrollmentId, request);
 
-        assertEquals(enrollmentId, response.enrollmentId());
-        assertEquals(studentId, response.studentId());
-        assertEquals("Asha Ravi Patel", response.studentName());
-        assertEquals(courseId, response.courseId());
-        assertEquals("CS-BSC", response.courseCode());
-        assertEquals(course, existingEnrollment.getCourse());
-        assertEquals(2, existingEnrollment.getSemester());
-        assertEquals("2026-2027", existingEnrollment.getAcademicYear());
-        assertEquals(Integer.valueOf(17), existingEnrollment.getRollNo());
-        assertEquals("B", existingEnrollment.getDivision());
-        assertEquals(new BigDecimal("3.75"), existingEnrollment.getFinalCgpa());
-        verify(enrollmentRepository).save(existingEnrollment);
+        assertEquals(enrollmentId, updated.getEnrollmentId());
+        assertEquals(student, updated.getStudent());
+        assertEquals(course, updated.getCourse());
+        assertEquals(2, updated.getSemester());
+        assertEquals("2026-2027", updated.getAcademicYear());
+        assertEquals(Integer.valueOf(17), updated.getRollNo());
+        assertEquals("B", updated.getDivision());
+        assertEquals("Pending", updated.getEnrollmentStatus());
+        assertEquals(new BigDecimal("3.75"), updated.getFinalCgpa());
+        verify(enrollmentRepository).save(existing);
+    }
+
+    @Test
+    void createRequiresExistingStudentAndCourseAndDefaultsStatus() {
+        UUID studentId = UUID.randomUUID();
+        long courseId = 7L;
+        Student student = new Student();
+        student.setStudentId(studentId);
+        Course course = new Course();
+        course.setId(courseId);
+        Enrollment request = validRequest(student, course);
+        request.setEnrollmentId(UUID.randomUUID());
+        request.setEnrollmentStatus(null);
+        when(studentRepository.findById(studentId)).thenReturn(Optional.of(student));
+        when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
+        when(enrollmentRepository.save(request)).thenAnswer(invocation -> {
+            Enrollment saved = invocation.getArgument(0);
+            saved.setEnrollmentId(UUID.randomUUID());
+            return saved;
+        });
+
+        Enrollment created = enrollmentService.create(request);
+
+        assertEquals(student, created.getStudent());
+        assertEquals(course, created.getCourse());
+        assertEquals("Active", created.getEnrollmentStatus());
+    }
+
+    @Test
+    void createReturnsBadRequestWhenStudentReferenceHasNoId() {
+        Enrollment request = validRequest(new Student(), new Course());
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class, () -> enrollmentService.create(request));
+
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+    }
+
+    @Test
+    void createReturnsBadRequestWhenCourseReferenceIsMissing() {
+        UUID studentId = UUID.randomUUID();
+        Student student = new Student();
+        student.setStudentId(studentId);
+        Enrollment request = validRequest(student, null);
+        when(studentRepository.findById(studentId)).thenReturn(Optional.of(student));
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class, () -> enrollmentService.create(request));
+
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+        assertEquals("course is required", exception.getReason());
     }
 
     @Test
@@ -113,6 +170,17 @@ class EnrollmentServiceImplTest {
                 ResponseStatusException.class, () -> enrollmentService.delete(enrollmentId));
 
         assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
-        verify(enrollmentRepository, never()).delete(org.mockito.ArgumentMatchers.any(Enrollment.class));
+        verify(enrollmentRepository, never()).delete(any(Enrollment.class));
+    }
+
+    private Enrollment validRequest(Student student, Course course) {
+        Enrollment enrollment = new Enrollment();
+        enrollment.setStudent(student);
+        enrollment.setCourse(course);
+        enrollment.setAcademicYear("2026-2027");
+        enrollment.setRollNo(1);
+        enrollment.setDivision("A");
+        enrollment.setStartDate(LocalDate.of(2026, 8, 1));
+        return enrollment;
     }
 }
