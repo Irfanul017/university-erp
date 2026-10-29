@@ -1,5 +1,7 @@
 package com.university.erp.student.service;
 
+import com.university.erp.course.entity.Course;
+import com.university.erp.course.repository.CourseRepository;
 import com.university.erp.student.dto.EnrollmentRequest;
 import com.university.erp.student.dto.EnrollmentResponse;
 import com.university.erp.student.entity.Enrollment;
@@ -22,10 +24,13 @@ public class EnrollmentServiceImpl implements EnrollmentService {
 
     private final EnrollmentRepository enrollmentRepository;
     private final StudentRepository studentRepository;
+    private final CourseRepository courseRepository;
 
-    public EnrollmentServiceImpl(EnrollmentRepository enrollmentRepository, StudentRepository studentRepository) {
+    public EnrollmentServiceImpl(EnrollmentRepository enrollmentRepository, StudentRepository studentRepository,
+            CourseRepository courseRepository) {
         this.enrollmentRepository = enrollmentRepository;
         this.studentRepository = studentRepository;
+        this.courseRepository = courseRepository;
     }
 
     @Override
@@ -57,8 +62,9 @@ public class EnrollmentServiceImpl implements EnrollmentService {
 
     @Override
     public EnrollmentResponse create(EnrollmentRequest request) {
+        Course course = getCourse(request.courseId());
         Enrollment enrollment = enrollmentRepository.save(
-                EnrollmentMapper.toEntity(request, getStudent(request.studentId())));
+                EnrollmentMapper.toEntity(request, getStudent(request.studentId()), course));
         logger.info("Created enrollment {} for student {}", enrollment.getEnrollmentId(), request.studentId());
         return EnrollmentMapper.toResponse(enrollment);
     }
@@ -71,7 +77,8 @@ public class EnrollmentServiceImpl implements EnrollmentService {
             return null;
         }
         Student student = getStudent(request.studentId());
-        EnrollmentMapper.updateEntity(enrollment, request, student);
+        Course course = getCourse(request.courseId());
+        EnrollmentMapper.updateEntity(enrollment, request, student, course);
         Enrollment updatedEnrollment = enrollmentRepository.save(enrollment);
         logger.info("Updated enrollment {}", enrollmentId);
         return EnrollmentMapper.toResponse(updatedEnrollment);
@@ -99,5 +106,14 @@ public class EnrollmentServiceImpl implements EnrollmentService {
                     return new ResponseStatusException(
                             HttpStatus.NOT_FOUND, "Student not found: " + studentId);
                 });
+    }
+
+    private Course getCourse(Long courseId) {
+        if (courseId == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "courseId is required");
+        }
+        return courseRepository.findById(courseId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Course not found: " + courseId));
     }
 }

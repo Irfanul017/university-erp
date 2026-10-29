@@ -6,6 +6,7 @@ import java.util.UUID;
 
 public record EnrollmentRequest(
 	UUID studentId,
+	Long courseId,
 	Integer semester,
 	String academicYear,
 	Integer rollNo,

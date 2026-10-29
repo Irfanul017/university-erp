@@ -8,6 +8,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.university.erp.course.entity.Course;
+import com.university.erp.course.repository.CourseRepository;
 import com.university.erp.student.dto.EnrollmentRequest;
 import com.university.erp.student.dto.EnrollmentResponse;
 import com.university.erp.student.entity.Enrollment;
@@ -27,13 +29,15 @@ class EnrollmentServiceImplTest {
 
     private EnrollmentRepository enrollmentRepository;
     private StudentRepository studentRepository;
+    private CourseRepository courseRepository;
     private EnrollmentServiceImpl enrollmentService;
 
     @BeforeEach
     void setUp() {
         enrollmentRepository = mock(EnrollmentRepository.class);
         studentRepository = mock(StudentRepository.class);
-        enrollmentService = new EnrollmentServiceImpl(enrollmentRepository, studentRepository);
+        courseRepository = mock(CourseRepository.class);
+        enrollmentService = new EnrollmentServiceImpl(enrollmentRepository, studentRepository, courseRepository);
     }
 
     @Test
@@ -64,6 +68,7 @@ class EnrollmentServiceImplTest {
     void updateMutatesAndSavesExistingEnrollment() {
         UUID enrollmentId = UUID.randomUUID();
         UUID studentId = UUID.randomUUID();
+        long courseId = 5L;
         Enrollment existingEnrollment = new Enrollment();
         existingEnrollment.setEnrollmentId(enrollmentId);
         Student student = new Student();
@@ -71,11 +76,16 @@ class EnrollmentServiceImplTest {
         student.setFirstName("Asha");
         student.setMiddleName("Ravi");
         student.setLastName("Patel");
+        Course course = new Course();
+        course.setId(courseId);
+        course.setCourseCode("CS-BSC");
+        course.setCourseName("Computer Science");
         EnrollmentRequest request = new EnrollmentRequest(
-                studentId, 2, "2026-2027", 17, "B", "Regular", "Active",
+                studentId, courseId, 2, "2026-2027", 17, "B", "Regular", "Active",
                 LocalDate.of(2026, 8, 1), null, null, new BigDecimal("3.75"));
         when(enrollmentRepository.findById(enrollmentId)).thenReturn(Optional.of(existingEnrollment));
         when(studentRepository.findById(studentId)).thenReturn(Optional.of(student));
+        when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
         when(enrollmentRepository.save(existingEnrollment)).thenReturn(existingEnrollment);
 
         EnrollmentResponse response = enrollmentService.update(enrollmentId, request);
@@ -83,6 +93,9 @@ class EnrollmentServiceImplTest {
         assertEquals(enrollmentId, response.enrollmentId());
         assertEquals(studentId, response.studentId());
         assertEquals("Asha Ravi Patel", response.studentName());
+        assertEquals(courseId, response.courseId());
+        assertEquals("CS-BSC", response.courseCode());
+        assertEquals(course, existingEnrollment.getCourse());
         assertEquals(2, existingEnrollment.getSemester());
         assertEquals("2026-2027", existingEnrollment.getAcademicYear());
         assertEquals(Integer.valueOf(17), existingEnrollment.getRollNo());

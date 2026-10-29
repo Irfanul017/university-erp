@@ -1,5 +1,6 @@
 package com.university.erp.student.entity;
 
+import com.university.erp.course.entity.Course;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -28,6 +29,10 @@ public class Enrollment {
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	@JoinColumn(name = "student_id", nullable = false)
 	private Student student;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "course_id")
+	private Course course;
 
 	private Integer semester;
 
@@ -65,6 +70,8 @@ public class Enrollment {
 	public void setEnrollmentId(UUID enrollmentId) { this.enrollmentId = enrollmentId; }
 	public Student getStudent() { return student; }
 	public void setStudent(Student student) { this.student = student; }
+	public Course getCourse() { return course; }
+	public void setCourse(Course course) { this.course = course; }
 	@Transient
 	public String getStudentName() {
 		if (student == null) return null;
