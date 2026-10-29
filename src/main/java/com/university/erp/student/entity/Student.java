@@ -1,5 +1,6 @@
 package com.university.erp.student.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -7,6 +8,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.GeneratedValue;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -25,27 +29,33 @@ public class Student {
 	private UUID studentId;
 
 	@Column(name = "enrollment_no", nullable = false, unique = true)
+	@NotBlank
 	private String enrollmentNo;
 
 	@Column(name = "first_name", nullable = false)
+	@NotBlank
 	private String firstName;
 
 	@Column(name = "middle_name")
 	private String middleName;
 
 	@Column(name = "last_name", nullable = false)
+	@NotBlank
 	private String lastName;
 
 	private String gender;
 	private LocalDate dob;
 
 	@Column(nullable = false, unique = true)
+	@NotBlank
+	@Email
 	private String email;
 
 	private String phone;
 	private String address;
 
 	@Column(name = "admission_date", nullable = false)
+	@NotNull
 	private LocalDate admissionDate;
 
 	@Column(name = "current_status", nullable = false)
@@ -58,6 +68,7 @@ public class Student {
 	private LocalDateTime updatedAt;
 
 	@OneToMany(mappedBy = "student", fetch = FetchType.LAZY)
+	@JsonIgnore
 	private List<Enrollment> enrollments = new ArrayList<>();
 
 	public UUID getStudentId() { return studentId; }

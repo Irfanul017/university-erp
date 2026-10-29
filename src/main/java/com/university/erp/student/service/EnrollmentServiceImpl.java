@@ -2,11 +2,8 @@ package com.university.erp.student.service;
 
 import com.university.erp.course.entity.Course;
 import com.university.erp.course.repository.CourseRepository;
-import com.university.erp.student.dto.EnrollmentRequest;
-import com.university.erp.student.dto.EnrollmentResponse;
 import com.university.erp.student.entity.Enrollment;
 import com.university.erp.student.entity.Student;
-import com.university.erp.student.mapper.EnrollmentMapper;
 import com.university.erp.student.repository.EnrollmentRepository;
 import com.university.erp.student.repository.StudentRepository;
 import java.util.List;
@@ -35,53 +32,66 @@ public class EnrollmentServiceImpl implements EnrollmentService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<EnrollmentResponse> findAll() {
-        List<EnrollmentResponse> enrollments = enrollmentRepository.findAll().stream()
-                .map(EnrollmentMapper::toResponse).toList();
+    public List<Enrollment> findAll() {
+        List<Enrollment> enrollments = enrollmentRepository.findAll();
         logger.info("Listed {} enrollments", enrollments.size());
         return enrollments;
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<EnrollmentResponse> findByStudentId(UUID studentId) {
+    public List<Enrollment> findByStudentId(UUID studentId) {
         getStudent(studentId);
-        List<EnrollmentResponse> enrollments = enrollmentRepository.findByStudentStudentId(studentId).stream()
-                .map(EnrollmentMapper::toResponse).toList();
+        List<Enrollment> enrollments = enrollmentRepository.findByStudentStudentId(studentId);
         logger.info("Listed {} enrollments for student {}", enrollments.size(), studentId);
         return enrollments;
     }
 
     @Override
     @Transactional(readOnly = true)
-    public EnrollmentResponse findById(UUID enrollmentId) {
-        EnrollmentResponse enrollment = EnrollmentMapper.toResponse(getEnrollment(enrollmentId));
+    public Enrollment findById(UUID enrollmentId) {
+        Enrollment enrollment = getEnrollment(enrollmentId);
         logger.info("Retrieved enrollment {}", enrollmentId);
         return enrollment;
     }
 
     @Override
-    public EnrollmentResponse create(EnrollmentRequest request) {
-        Course course = getCourse(request.courseId());
-        Enrollment enrollment = enrollmentRepository.save(
-                EnrollmentMapper.toEntity(request, getStudent(request.studentId()), course));
-        logger.info("Created enrollment {} for student {}", enrollment.getEnrollmentId(), request.studentId());
-        return EnrollmentMapper.toResponse(enrollment);
+    public Enrollment create(Enrollment request) {
+        Student student = getStudentId(request);
+        Course course = getCourseId(request);
+        request.setEnrollmentId(null);
+        request.setStudent(student);
+        request.setCourse(course);
+        if (request.getEnrollmentStatus() == null) {
+            request.setEnrollmentStatus("Active");
+        }
+        Enrollment enrollment = enrollmentRepository.save(request);
+        logger.info("Created enrollment {} for student {}", enrollment.getEnrollmentId(), student.getStudentId());
+        return enrollment;
     }
 
     @Override
-    public EnrollmentResponse update(UUID enrollmentId, EnrollmentRequest request) {
-        Enrollment enrollment = enrollmentRepository.findById(enrollmentId).orElse(null);
-        if (enrollment == null) {
-            logger.warn("Cannot update enrollment {} because it does not exist", enrollmentId);
-            return null;
+    public Enrollment update(UUID enrollmentId, Enrollment request) {
+        Enrollment enrollment = getEnrollment(enrollmentId);
+        Student student = getStudentId(request);
+        Course course = getCourseId(request);
+        enrollment.setStudent(student);
+        enrollment.setCourse(course);
+        enrollment.setSemester(request.getSemester());
+        enrollment.setAcademicYear(request.getAcademicYear());
+        enrollment.setRollNo(request.getRollNo());
+        enrollment.setDivision(request.getDivision());
+        enrollment.setAdmissionType(request.getAdmissionType());
+        if (request.getEnrollmentStatus() != null) {
+            enrollment.setEnrollmentStatus(request.getEnrollmentStatus());
         }
-        Student student = getStudent(request.studentId());
-        Course course = getCourse(request.courseId());
-        EnrollmentMapper.updateEntity(enrollment, request, student, course);
+        enrollment.setStartDate(request.getStartDate());
+        enrollment.setEndDate(request.getEndDate());
+        enrollment.setExitReason(request.getExitReason());
+        enrollment.setFinalCgpa(request.getFinalCgpa());
         Enrollment updatedEnrollment = enrollmentRepository.save(enrollment);
         logger.info("Updated enrollment {}", enrollmentId);
-        return EnrollmentMapper.toResponse(updatedEnrollment);
+        return updatedEnrollment;
     }
 
     @Override
@@ -100,6 +110,9 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     }
 
     private Student getStudent(UUID studentId) {
+        if (studentId == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "studentId is required");
+        }
         return studentRepository.findById(studentId)
                 .orElseThrow(() -> {
                     logger.warn("Student {} was not found", studentId);
@@ -115,5 +128,19 @@ public class EnrollmentServiceImpl implements EnrollmentService {
         return courseRepository.findById(courseId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Course not found: " + courseId));
+    }
+
+    private Student getStudentId(Enrollment enrollment) {
+        if (enrollment.getStudent() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "student is required");
+        }
+        return getStudent(enrollment.getStudent().getStudentId());
+    }
+
+    private Course getCourseId(Enrollment enrollment) {
+        if (enrollment.getCourse() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "course is required");
+        }
+        return getCourse(enrollment.getCourse().getId());
     }
 }
