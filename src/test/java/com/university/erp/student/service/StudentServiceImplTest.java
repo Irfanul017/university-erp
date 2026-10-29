@@ -104,6 +104,47 @@ class StudentServiceImplTest {
         verify(studentRepository, never()).delete(any(Student.class));
     }
 
+    @Test
+    void deleteMarksStudentInactiveAndSavesWithoutRemovingIt() {
+        UUID studentId = UUID.randomUUID();
+        Student existing = validStudent();
+        existing.setStudentId(studentId);
+        when(studentRepository.findById(studentId)).thenReturn(Optional.of(existing));
+        when(studentRepository.save(existing)).thenReturn(existing);
+
+        studentService.delete(studentId);
+
+        assertEquals("Inactive", existing.getCurrentStatus());
+        verify(studentRepository).save(existing);
+        verify(studentRepository, never()).delete(any(Student.class));
+    }
+
+    @Test
+    void hardDeletePhysicallyRemovesExistingStudent() {
+        UUID studentId = UUID.randomUUID();
+        Student existing = validStudent();
+        existing.setStudentId(studentId);
+        when(studentRepository.findById(studentId)).thenReturn(Optional.of(existing));
+
+        studentService.hardDelete(studentId);
+
+        verify(studentRepository).delete(existing);
+        verify(studentRepository, never()).save(any(Student.class));
+    }
+
+    @Test
+    void hardDeleteReturnsNotFoundWhenStudentDoesNotExist() {
+        UUID studentId = UUID.randomUUID();
+        when(studentRepository.findById(studentId)).thenReturn(Optional.empty());
+
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class, () -> studentService.hardDelete(studentId));
+
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+        assertEquals("Student not found: " + studentId, exception.getReason());
+        verify(studentRepository, never()).delete(any(Student.class));
+    }
+
     private Student validStudent() {
         Student student = new Student();
         student.setEnrollmentNo("ENR-2026-001");

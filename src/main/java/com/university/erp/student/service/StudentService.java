@@ -10,4 +10,5 @@ public interface StudentService {
 	Student create(Student request);
 	Student update(UUID studentId, Student request);
 	void delete(UUID studentId);
+	void hardDelete(UUID studentId);
 }

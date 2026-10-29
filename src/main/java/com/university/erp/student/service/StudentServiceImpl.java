@@ -74,6 +74,13 @@ public class StudentServiceImpl implements StudentService {
         logger.info("Marked student {} as inactive", studentId);
     }
 
+    @Override
+    public void hardDelete(UUID studentId) {
+        Student student = getStudent(studentId);
+        studentRepository.delete(student);
+        logger.info("Permanently deleted student {}", studentId);
+    }
+
     private Student getStudent(UUID studentId) {
         return studentRepository.findById(studentId)
                 .orElseThrow(() -> {
