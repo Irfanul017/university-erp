@@ -10,6 +10,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -28,6 +30,7 @@ public class Enrollment {
 
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	@JoinColumn(name = "student_id", nullable = false)
+	@NotNull
 	private Student student;
 
 	@ManyToOne(fetch = FetchType.LAZY)
@@ -37,12 +40,15 @@ public class Enrollment {
 	private Integer semester;
 
 	@Column(name = "academic_year", nullable = false)
+	@NotBlank
 	private String academicYear;
 
 	@Column(name = "roll_no", nullable = false)
+	@NotNull
 	private Integer rollNo;
 
 	@Column(nullable = false)
+	@NotBlank
 	private String division;
 
 	@Column(name = "admission_type")
@@ -52,6 +58,7 @@ public class Enrollment {
 	private String enrollmentStatus = "Active";
 
 	@Column(name = "start_date", nullable = false)
+	@NotNull
 	private LocalDate startDate;
 
 	@Column(name = "end_date")

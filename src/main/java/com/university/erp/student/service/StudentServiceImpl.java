@@ -1,9 +1,6 @@
 package com.university.erp.student.service;
 
-import com.university.erp.student.dto.StudentRequest;
-import com.university.erp.student.dto.StudentResponse;
 import com.university.erp.student.entity.Student;
-import com.university.erp.student.mapper.StudentMapper;
 import com.university.erp.student.repository.StudentRepository;
 import java.util.List;
 import java.util.UUID;
@@ -24,33 +21,49 @@ public class StudentServiceImpl implements StudentService {
     }
 
     @Override
-    public List<StudentResponse> findAll() {
-        List<StudentResponse> students = studentRepository.findAll().stream().map(StudentMapper::toResponse).toList();
+    public List<Student> findAll() {
+        List<Student> students = studentRepository.findAll();
         logger.info("Listed {} students", students.size());
         return students;
     }
 
     @Override
-    public StudentResponse findById(UUID studentId) {
-        StudentResponse student = StudentMapper.toResponse(getStudent(studentId));
+    public Student findById(UUID studentId) {
+        Student student = getStudent(studentId);
         logger.info("Retrieved student {}", studentId);
         return student;
     }
 
     @Override
-    public StudentResponse create(StudentRequest request) {
-        Student student = studentRepository.save(StudentMapper.toEntity(request));
+    public Student create(Student request) {
+        request.setStudentId(null);
+        if (request.getCurrentStatus() == null) {
+            request.setCurrentStatus("Active");
+        }
+        Student student = studentRepository.save(request);
         logger.info("Created student {}", student.getStudentId());
-        return StudentMapper.toResponse(student);
+        return student;
     }
 
     @Override
-    public StudentResponse update(UUID studentId, StudentRequest request) {
+    public Student update(UUID studentId, Student request) {
         Student student = getStudent(studentId);
-        StudentMapper.updateEntity(student, request);
+        student.setEnrollmentNo(request.getEnrollmentNo());
+        student.setFirstName(request.getFirstName());
+        student.setMiddleName(request.getMiddleName());
+        student.setLastName(request.getLastName());
+        student.setGender(request.getGender());
+        student.setDob(request.getDob());
+        student.setEmail(request.getEmail());
+        student.setPhone(request.getPhone());
+        student.setAddress(request.getAddress());
+        student.setAdmissionDate(request.getAdmissionDate());
+        if (request.getCurrentStatus() != null) {
+            student.setCurrentStatus(request.getCurrentStatus());
+        }
         Student updatedStudent = studentRepository.save(student);
         logger.info("Updated student {}", studentId);
-        return StudentMapper.toResponse(updatedStudent);
+        return updatedStudent;
     }
 
     @Override

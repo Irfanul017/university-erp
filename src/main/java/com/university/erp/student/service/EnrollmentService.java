@@ -1,15 +1,14 @@
 package com.university.erp.student.service;
 
-import com.university.erp.student.dto.EnrollmentRequest;
-import com.university.erp.student.dto.EnrollmentResponse;
+import com.university.erp.student.entity.Enrollment;
 import java.util.List;
 import java.util.UUID;
 
 public interface EnrollmentService {
-	List<EnrollmentResponse> findAll();
-	List<EnrollmentResponse> findByStudentId(UUID studentId);
-	EnrollmentResponse findById(UUID enrollmentId);
-	EnrollmentResponse create(EnrollmentRequest request);
-	EnrollmentResponse update(UUID enrollmentId, EnrollmentRequest request);
+	List<Enrollment> findAll();
+	List<Enrollment> findByStudentId(UUID studentId);
+	Enrollment findById(UUID enrollmentId);
+	Enrollment create(Enrollment request);
+	Enrollment update(UUID enrollmentId, Enrollment request);
 	void delete(UUID enrollmentId);
 }

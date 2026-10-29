@@ -1,8 +1,7 @@
 package com.university.erp.student.controller;
 
-import com.university.erp.student.dto.EnrollmentResponse;
-import com.university.erp.student.dto.StudentRequest;
-import com.university.erp.student.dto.StudentResponse;
+import com.university.erp.student.entity.Enrollment;
+import com.university.erp.student.entity.Student;
 import com.university.erp.student.service.EnrollmentService;
 import com.university.erp.student.service.StudentService;
 import java.net.URI;
@@ -36,28 +35,28 @@ public class StudentController {
 
 	@GetMapping
 	@Operation(summary = "List students")
-	public List<StudentResponse> findAll() { return studentService.findAll(); }
+	public List<Student> findAll() { return studentService.findAll(); }
 
 	@GetMapping("/{studentId}")
 	@Operation(summary = "Get a student")
-	public StudentResponse findById(@PathVariable UUID studentId) { return studentService.findById(studentId); }
+	public Student findById(@PathVariable UUID studentId) { return studentService.findById(studentId); }
 
 	@GetMapping("/{studentId}/enrollments")
 	@Operation(summary = "List enrollments for a student")
-	public List<EnrollmentResponse> findEnrollments(@PathVariable UUID studentId) {
+	public List<Enrollment> findEnrollments(@PathVariable UUID studentId) {
 		return enrollmentService.findByStudentId(studentId);
 	}
 
 	@PostMapping
 	@Operation(summary = "Create a student")
-	public ResponseEntity<StudentResponse> create(@Valid @RequestBody StudentRequest request) {
-		StudentResponse response = studentService.create(request);
-		return ResponseEntity.created(URI.create("/api/students/" + response.studentId())).body(response);
+	public ResponseEntity<Student> create(@Valid @RequestBody Student request) {
+		Student response = studentService.create(request);
+		return ResponseEntity.created(URI.create("/api/students/" + response.getStudentId())).body(response);
 	}
 
 	@PutMapping("/{studentId}")
 	@Operation(summary = "Update a student")
-	public StudentResponse update(@PathVariable UUID studentId, @Valid @RequestBody StudentRequest request) {
+	public Student update(@PathVariable UUID studentId, @Valid @RequestBody Student request) {
 		return studentService.update(studentId, request);
 	}
 
