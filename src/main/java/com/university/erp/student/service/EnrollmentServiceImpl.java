@@ -56,6 +56,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     }
 
     @Override
+    @Transactional
     public Enrollment create(Enrollment request) {
         Student student = getStudentId(request);
         Course course = getCourseId(request);
@@ -71,6 +72,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     }
 
     @Override
+    @Transactional
     public Enrollment update(UUID enrollmentId, Enrollment request) {
         Enrollment enrollment = getEnrollment(enrollmentId);
         Student student = getStudentId(request);
@@ -95,6 +97,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     }
 
     @Override
+    @Transactional
     public void delete(UUID enrollmentId) {
         enrollmentRepository.delete(getEnrollment(enrollmentId));
         logger.info("Deleted enrollment {}", enrollmentId);
