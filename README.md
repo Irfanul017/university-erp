@@ -16,7 +16,7 @@ A Spring Boot REST API module for managing examinations and recording student gr
 
 The frontend sends JSON to an API endpoint. A Spring controller receives the request, the service performs the operation, and a Spring Data repository reads or saves the entity in PostgreSQL. The API returns a JSON response for the frontend to display.
 
-The branch provides the backend API. A separate frontend can integrate with these endpoints.
+This branch provides the backend API. A separate frontend can integrate with these endpoints.
 
 ## Data relationships
 
@@ -26,11 +26,11 @@ The branch provides the backend API. A separate frontend can integrate with thes
 
 A grade record therefore connects one student with one examination. The subject and student must already exist in the ERP database before their IDs are used.
 
-The Supabase schema also constrains the maximum marks by exam type: `ISE_1`, `ISE_2`, `ISE_3`, and `IE` use 20 marks; `ESE` uses 60; and `PRACTICAL` uses 20.
+The Supabase schema sets maximum marks by exam type: 20 for `ISE_1`, `ISE_2`, `ISE_3`, `IE`, and `PRACTICAL`; 60 for `ESE`.
 
 ## API reference
 
-Use the base URL for your running application. The examples below use port `8080`; change it if the server is configured to use another port.
+The examples below use port `8080`. Replace it with the port configured for your application.
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
@@ -53,12 +53,12 @@ A successful create returns `201 Created` with the saved examination, including 
 
 ### Record a grade
 
-Replace the sample IDs with an existing examination ID and student UUID from your database.
+Replace the sample IDs with an existing examination ID and student UUID from your database. The UUID below is a placeholder.
 
 ```bash
 curl -i -X POST http://localhost:8080/api/grades \
   -H "Content-Type: application/json" \
-  -d '{"examId":4,"studentId":"01e0f34c-bb99-4250-bb6b-2cff4b1e67e2","marksObtained":55,"grade":"A","gradePoint":4.0,"resultStatus":"PASS","remarks":"Semester result"}'
+  -d '{"examId":4,"studentId":"<student-uuid>","marksObtained":55,"grade":"A","gradePoint":4.0,"resultStatus":"PASS","remarks":"Semester result"}'
 ```
 
 ### Read examinations and grades
@@ -74,7 +74,7 @@ curl -i http://localhost:8080/api/grades/1
 ```bash
 curl -i -X PUT http://localhost:8080/api/grades/1 \
   -H "Content-Type: application/json" \
-  -d '{"examId":4,"studentId":"01e0f34c-bb99-4250-bb6b-2cff4b1e67e2","marksObtained":54,"grade":"A","gradePoint":4.0,"resultStatus":"PASS","remarks":"Corrected result"}'
+  -d '{"examId":4,"studentId":"<student-uuid>","marksObtained":54,"grade":"A","gradePoint":4.0,"resultStatus":"PASS","remarks":"Corrected result"}'
 ```
 
 ## Run locally
@@ -83,7 +83,7 @@ curl -i -X PUT http://localhost:8080/api/grades/1 \
 
 - A JDK compatible with the version configured in `pom.xml`.
 - The Maven wrapper included in the repository.
-- Access to the project’s Supabase PostgreSQL database.
+- Access to the project's Supabase PostgreSQL database.
 
 ### Configure the database
 
